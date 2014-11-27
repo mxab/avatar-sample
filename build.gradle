@@ -1,0 +1,39 @@
+ext {
+  avatarVersion = "0.10.25-SNAPSHOT"
+}
+
+repositories {
+
+  maven {
+    url "https://maven.java.net/content/repositories/snapshots"
+  }
+}
+configurations {
+  avatar
+  distMac
+}
+dependencies {
+  avatar "com.oracle:avatar-js:$avatarVersion"
+  distMac "com.oracle:libavatar-js-macosx-x64:$avatarVersion"
+}
+task provideNativeLib(type:Copy) {
+  from configurations.distMac.singleFile
+  into "$buildDir/native/"
+  rename { fileName ->
+    if(fileName == "libavatar-js-macosx-x64-${avatarVersion}.dylib") {
+      "libavatar-js.dylib"
+    }
+  }
+}
+/*task runApp(type:Exec, dependsOn: [provideNativeLib]) {
+
+  executable "/Library/Java/JavaVirtualMachines/jdk1.8.0_05.jdk/Contents/Home/bin/java"
+  args "-Djava.library.path=$buildDir/native", "-jar", "$configurations.avatar.singleFile", "app.js"
+}*/
+
+task run(type:JavaExec, dependsOn: [provideNativeLib]) {
+  main ="com.oracle.avatar.js.Server"
+  classpath configurations.avatar
+  systemProperties["java.library.path"] = "$buildDir/native"
+  args "app.js"
+}
