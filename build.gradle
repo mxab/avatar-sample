@@ -1,5 +1,7 @@
 ext {
   avatarVersion = "0.10.25-SNAPSHOT"
+
+  osVersions = ["macosx-x64","linux-x64", "win-x64"]
 }
 
 repositories {
@@ -14,16 +16,23 @@ configurations {
 }
 dependencies {
   avatar "com.oracle:avatar-js:$avatarVersion"
-  distMac "com.oracle:libavatar-js-macosx-x64:$avatarVersion"
+  osVersions.each {
+    distMac "com.oracle:libavatar-js-$it:$avatarVersion"
+  }
+
 }
 task provideNativeLib(type:Copy) {
-  from configurations.distMac.singleFile
-  into "$buildDir/native/"
+
+  from configurations.distMac
   rename { fileName ->
-    if(fileName == "libavatar-js-macosx-x64-${avatarVersion}.dylib") {
-      "libavatar-js.dylib"
+
+    osVersions.each {
+      fileName -= "-$it-$avatarVersion"
     }
+    fileName
   }
+  into ("$buildDir/native/")
+
 }
 /*task runApp(type:Exec, dependsOn: [provideNativeLib]) {
 
